@@ -5,7 +5,9 @@ import com.hexaware.Amazecare.service.DoctorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
+import java.util.Optional;
 
 import static org.springframework.http.HttpStatus.*;
 
@@ -21,43 +23,44 @@ public class DoctorController {
 
     @GetMapping("/doctors")
     public ResponseEntity<List<Doctor>> getAllDoctors() {
-        var doctors = doctorService.getAllDoctors();
+        var doctors = doctorService.findAllDoctors();
         return new ResponseEntity<>(doctors, OK);
     }
 
-    @GetMapping("/doctors/{specialization}")
+    @GetMapping("/doctors/specialization/{specialization}")
     public ResponseEntity<List<Doctor>> getDoctorsBySpecialization(@PathVariable String specialization) {
-        var doctors = doctorService.getDoctorsBySpecialization(specialization);
+        var doctors = doctorService.findDoctorsBySpecialization(specialization);
         return new ResponseEntity<>(doctors, OK);
     }
 
-    @GetMapping("/doctors/{name}")
+    @GetMapping("/doctors/name/{name}")
     public ResponseEntity<List<Doctor>> getDoctorsByName(@PathVariable String name) {
-        var doctors = doctorService.getDoctorsByName(name);
+        var doctors = doctorService.findDoctorsContainingFirstName(name);
         return new ResponseEntity<>(doctors, OK);
     }
 
-    @GetMapping("/doctor/{id}")
-    public ResponseEntity<Doctor> getDoctorById(@PathVariable Long id) {
-        var doctor = doctorService.getDoctorById(id);
-        if (doctor.isPresent()) return new ResponseEntity<>(doctor.get(), FOUND);
-        return new ResponseEntity<>(NOT_FOUND);
+    @GetMapping("/doctor/{doctorId}")
+    public ResponseEntity<Doctor> getDoctorById(@PathVariable("doctorId") Long doctorId) {
+        Optional<Doctor> doctor = doctorService.findDoctorById(doctorId);
+        return doctor.map(value -> new ResponseEntity<>(value, OK))
+                .orElseGet(() -> new ResponseEntity<>(NOT_FOUND));
     }
 
-    @PutMapping("/doctor/save")
-    public ResponseEntity<Doctor> saveDoctor(Doctor doctor) {
-         return new ResponseEntity<>(doctorService.saveDoctor(doctor), OK);
+    @PostMapping("/doctor/save")
+    public ResponseEntity<Doctor> saveDoctor(@RequestBody Doctor doctor) throws Exception{
+        if (doctorService.findDoctorByEmail(doctor.getPersonalDetails().getEmail()) == null)
+            return new ResponseEntity<>(doctorService.saveDoctor(doctor), CREATED);
+       throw new Exception("Doctor already exists");
     }
 
     @PutMapping("/doctor/update")
-    public ResponseEntity<Doctor> updateDoctor(Doctor newDoctor) {
+    public ResponseEntity<Doctor> updateDoctor(@RequestBody Doctor newDoctor) {
         return new ResponseEntity<>(doctorService.updateDoctor(newDoctor), OK);
     }
 
-    @DeleteMapping("/doctor/delete/{id}")
-    public ResponseEntity<?> deleteDoctor(Long id) {
-        doctorService.deleteDoctor(id);
+    @DeleteMapping("/doctor/delete/{doctorId}")
+    public ResponseEntity<Void> deleteDoctor(@PathVariable("doctorId") Long doctorId) {
+        doctorService.deleteDoctor(doctorId);
         return new ResponseEntity<>(OK);
     }
-
 }

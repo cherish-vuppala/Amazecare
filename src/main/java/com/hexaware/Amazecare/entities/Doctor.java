@@ -1,11 +1,9 @@
 package com.hexaware.Amazecare.entities;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-import static jakarta.persistence.GenerationType.IDENTITY;
+import java.util.List;
 
 @Entity
 @Table(name = "doctors")
@@ -14,16 +12,22 @@ import static jakarta.persistence.GenerationType.IDENTITY;
 @AllArgsConstructor
 public class Doctor {
 
-    @Id @GeneratedValue(strategy = IDENTITY)
-    @Column(name = "doctor_id")
-    private Long doctorId;
-    @Column(nullable = false)
-    private String firstName;
-    @Column(nullable = false)
-    private String lastName;
-    @Column(nullable = false)
-    private String phoneNumber;
+    @Id
+    @Column(name = "user_id")
+    private Long id;  // Shared primary key with User
+
+    @OneToOne
+    @MapsId  // This maps the Doctor's ID to User's ID
+    @JoinColumn(name = "user_id")
+    private AppUser user;
+
+    @Embedded
+    private PersonalDetails personalDetails;
+
     @Column(nullable = false)
     private String specialization;
+
+    @OneToMany(mappedBy = "doctor", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Appointment> appointments;
 
 }

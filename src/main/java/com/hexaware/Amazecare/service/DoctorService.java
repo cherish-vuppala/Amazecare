@@ -20,23 +20,27 @@ public class DoctorService {
         this.doctorRepo = doctorRepo;
     }
 
-    public List<Doctor> getAllDoctors() {
+    public List<Doctor> findAllDoctors() {
         return doctorRepo.findAll();
     }
 
-    public List<Doctor> getDoctorsBySpecialization(String specialization) {
+    public List<Doctor> findDoctorsBySpecialization(String specialization) {
 
         return doctorRepo.findDoctorsBySpecialization(specialization);
     }
 
-    public List<Doctor> getDoctorsByName(String name) {
-        return doctorRepo.findDoctorsByFirstName(name);
+    public List<Doctor> findDoctorsContainingFirstName(String firstName) {
+        return doctorRepo.findDoctorsContainingFirstName(firstName);
     }
 
-    public Optional<Doctor> getDoctorById(Long id) throws DoctorNotFoundException {
-        Optional<Doctor> doctorOptional = doctorRepo.findById(id);
+    public Optional<Doctor> findDoctorById(Long id) throws DoctorNotFoundException {
+        Optional<Doctor> doctorOptional = doctorRepo.findDoctorById(id);
         if (doctorOptional.isPresent()) return doctorOptional;
         throw new DoctorNotFoundException("Doctor not found with id " + id);
+    }
+
+    public Doctor findDoctorByEmail(String email) throws Exception{
+        return doctorRepo.findDoctorByEmail(email).orElseThrow();
     }
 
     public Doctor saveDoctor(Doctor doctor) {
@@ -48,13 +52,13 @@ public class DoctorService {
     }
 
     @Transactional
-    public void deleteDoctor(Long id) throws DoctorNotFoundException{
-        var doctorOptional = doctorRepo.findById(id);
-        if (doctorOptional.isPresent()) {
-            var doctor = doctorOptional.get();
-            doctorRepo.deleteDoctorByDoctorId(doctor.getDoctorId());
+    public void deleteDoctor(Long doctorId) {
+        var doctor = doctorRepo.findDoctorById(doctorId);
+        if (doctor.isPresent()) {
+            doctorRepo.delete(doctor.get());
+        } else {
+            throw new DoctorNotFoundException("Doctor not found with id " + doctorId);
         }
-        throw new DoctorNotFoundException("Doctor not found with id " + id);
     }
 
 }
